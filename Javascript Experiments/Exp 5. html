@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Cart — Discount Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #7c3aed;
+    --primary-dark: #5b21b6;
+    --accent: #f472b6;
+    --accent2: #22d3ee;
+    --success: #22c55e;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+    color: #1f2937;
+    background: radial-gradient(circle at 20% 20%, #312e81, transparent 45%),
+                radial-gradient(circle at 80% 10%, #831843, transparent 40%),
+                radial-gradient(circle at 50% 90%, #0e7490, transparent 40%),
+                #0f0f1e;
+    background-attachment: fixed;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* floating decorative blobs */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    z-index: 0;
+    animation: float 12s ease-in-out infinite;
+  }
+  body::before {
+    width: 320px; height: 320px;
+    background: var(--primary);
+    top: -80px; left: -80px;
+  }
+  body::after {
+    width: 260px; height: 260px;
+    background: var(--accent2);
+    bottom: -60px; right: -60px;
+    animation-delay: 3s;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    50% { transform: translateY(30px) translateX(20px); }
+  }
+
+  .app {
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .title-wrap {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    color: #fff;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(90deg, #fff, #e9d5ff 60%, #fbcfe8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+  }
+
+  .cart-emoji {
+    display: inline-block;
+    animation: swing 2.2s ease-in-out infinite;
+    -webkit-text-fill-color: initial;
+  }
+  @keyframes swing {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-12deg); }
+    75% { transform: rotate(12deg); }
+  }
+
+  .by-line {
+    text-align: center;
+    color: #c4b5fd;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+    margin-bottom: 6px;
+  }
+
+  .by-line span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #a5b4fc;
+    margin-bottom: 30px;
+    font-size: 14px;
+  }
+
+  .card {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 26px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+    margin-bottom: 24px;
+    border: 1px solid rgba(255,255,255,0.15);
+    animation: riseIn 0.5s ease both;
+  }
+
+  .card:nth-of-type(2) { animation-delay: 0.08s; }
+  .card:nth-of-type(3) { animation-delay: 0.16s; }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card h2 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card h2 .icon-badge {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    font-size: 13px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+    background: #f9fafb;
+  }
+
+  .field input:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+  }
+
+  button:active { transform: scale(0.95); }
+
+  #addBtn {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    padding: 11px 20px;
+    height: 42px;
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+  }
+
+  #addBtn:hover {
+    box-shadow: 0 8px 22px rgba(124, 58, 237, 0.55);
+    transform: translateY(-1px);
+  }
+
+  .error {
+    color: #dc2626;
+    font-size: 13px;
+    margin-top: 10px;
+    display: none;
+    font-weight: 600;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  thead th {
+    text-align: left;
+    color: #9ca3af;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px;
+    border-bottom: 2px solid #f1f5f9;
+  }
+
+  tbody td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+  }
+
+  tbody tr {
+    animation: rowIn 0.3s ease both;
+  }
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  tbody tr:hover { background: #faf5ff; }
+
+  .item-name { font-weight: 600; color: #111827; }
+
+  .remove-btn {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .remove-btn:hover { background: #fecaca; }
+
+  .empty-msg {
+    text-align: center;
+    color: #9ca3af;
+    padding: 30px 0;
+    font-size: 14px;
+  }
+
+  .empty-msg .big-emoji {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 6px;
+  }
+
+  .summary-box {
+    border-radius: 12px;
+    padding: 16px 18px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    transition: transform 0.2s;
+  }
+  .summary-box:hover { transform: translateY(-2px); }
+
+  .summary-box .label {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .summary-box .value {
+    font-size: 21px;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .summary-box.discount {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border-color: #a7f3d0;
+  }
+  .summary-box.discount .value { color: var(--success); }
+
+  .summary-box.final {
+    grid-column: span 2;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border: none;
+  }
+  .summary-box.final .label { color: rgba(255,255,255,0.85); }
+  .summary-box.final .value { color: #fff; font-size: 26px; }
+
+  .tier-note {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #9ca3af;
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  .tier-note b { color: #6b7280; }
+
+  footer {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    #addBtn { grid-column: span 2; }
+    .summary { grid-template-columns: 1fr; }
+    .summary-box.final { grid-column: span 1; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="title-wrap">
+    <h1><span class="cart-emoji">🛒</span> Smart Cart</h1>
+  </div>
+  <p class="by-line"><span>Vithika Saoji</span></p>
+  <p class="subtitle">✨ Add items and watch the discount grow automatically ✨</p>
+
+  <!-- Add Item Form -->
+  <div class="card">
+    <h2><span class="icon-badge">➕</span> Add Item</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label for="itemName">Item Name</label>
+        <input type="text" id="itemName" placeholder="e.g. Headphones">
+      </div>
+      <div class="field">
+        <label for="itemPrice">Price (₹)</label>
+        <input type="number" id="itemPrice" placeholder="0" min="0">
+      </div>
+      <div class="field">
+        <label for="itemQty">Quantity</label>
+        <input type="number" id="itemQty" placeholder="1" min="1" value="1">
+      </div>
+      <button id="addBtn" onclick="addItem()">+ Add to Cart</button>
+    </div>
+    <p class="error" id="errorMsg">⚠️ Please enter a valid name, price and quantity.</p>
+  </div>
+
+  <!-- Cart Table -->
+  <div class="card">
+    <h2><span class="icon-badge">🧾</span> Your Cart</h2>
+    <table id="cartTable">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Price</th>
+          <th>Qty</th>
+          <th>Subtotal</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="cartBody">
+        <!-- rows injected by JS -->
+      </tbody>
+    </table>
+    <p class="empty-msg" id="emptyMsg"><span class="big-emoji">🛍️</span>Your cart is empty. Add an item above.</p>
+  </div>
+
+  <!-- Summary -->
+  <div class="card">
+    <h2><span class="icon-badge">💰</span> Bill Summary</h2>
+    <div class="summary">
+      <div class="summary-box">
+        <div class="label">Total Amount</div>
+        <div class="value" id="totalValue">₹0.00</div>
+      </div>
+      <div class="summary-box discount">
+        <div class="label">Discount (<span id="discountPercent">0</span>%)</div>
+        <div class="value" id="discountValue">₹0.00</div>
+      </div>
+      <div class="summary-box final">
+        <div class="label">Final Amount Payable</div>
+        <div class="value" id="finalValue">₹0.00</div>
+      </div>
+    </div>
+    <p class="tier-note">
+      <b>Discount Tiers</b> &nbsp;•&nbsp; Above ₹5000: 20% &nbsp;|&nbsp; Above ₹2000: 15% &nbsp;|&nbsp; Above ₹1000: 10% &nbsp;|&nbsp; Above ₹500: 5% &nbsp;|&nbsp; Below ₹500: 0%
+    </p>
+  </div>
+
+  <footer>Vithika Saoji</footer>
+</div>
+
+<script>
+  // ---------- Data: Array of Objects ----------
+  // Each item in the cart is an object: { name, price, quantity }
+  let cart = [];
+
+  // ---------- Discount Logic ----------
+  // More amount => more discount. Returns discount rate (as a decimal).
+  function getDiscountRate(total) {
+    if (total > 5000) return 0.20;
+    if (total > 2000) return 0.15;
+    if (total > 1000) return 0.10;
+    if (total > 500)  return 0.05;
+    return 0;
+  }
+
+  // ---------- Add Item to Cart ----------
+  function addItem() {
+    const nameInput = document.getElementById('itemName');
+    const priceInput = document.getElementById('itemPrice');
+    const qtyInput = document.getElementById('itemQty');
+    const errorMsg = document.getElementById('errorMsg');
+
+    const name = nameInput.value.trim();
+    const price = parseFloat(priceInput.value);
+    const quantity = parseInt(qtyInput.value);
+
+    // Basic validation
+    if (!name || isNaN(price) || price <= 0 || isNaN(quantity) || quantity <= 0) {
+      errorMsg.style.display = 'block';
+      return;
+    }
+    errorMsg.style.display = 'none';
+
+    // Create object and push into the array (array of objects)
+    const item = { name: name, price: price, quantity: quantity };
+    cart.push(item);
+
+    // Clear inputs
+    nameInput.value = '';
+    priceInput.value = '';
+    qtyInput.value = '1';
+    nameInput.focus();
+
+    renderCart();
+  }
+
+  // ---------- Remove Item ----------
+  function removeItem(index) {
+    cart.splice(index, 1);
+    renderCart();
+  }
+
+  // ---------- Render Cart Table + Summary ----------
+  function renderCart() {
+    const cartBody = document.getElementById('cartBody');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const table = document.getElementById('cartTable');
+
+    cartBody.innerHTML = '';
+
+    if (cart.length === 0) {
+      table.style.display = 'none';
+      emptyMsg.style.display = 'block';
+    } else {
+      table.style.display = 'table';
+      emptyMsg.style.display = 'none';
+
+      cart.forEach((item, index) => {
+        const subtotal = item.price * item.quantity;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="item-name">${item.name}</td>
+          <td>₹${item.price.toFixed(2)}</td>
+          <td>${item.quantity}</td>
+          <td>₹${subtotal.toFixed(2)}</td>
+          <td><button class="remove-btn" onclick="removeItem(${index})">✕ Remove</button></td>
+        `;
+        cartBody.appendChild(row);
+      });
+    }
+
+    // ---------- reduce(): combine all items into one total ----------
+    const total = cart.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
+    }, 0);
+
+    const discountRate = getDiscountRate(total);
+    const discount = total * discountRate;
+    const finalAmount = total - discount;
+
+    document.getElementById('totalValue').textContent = `₹${total.toFixed(2)}`;
+    document.getElementById('discountPercent').textContent = (discountRate * 100).toFixed(0);
+    document.getElementById('discountValue').textContent = `₹${discount.toFixed(2)}`;
+    document.getElementById('finalValue').textContent = `₹${finalAmount.toFixed(2)}`;
+  }
+
+  // Allow pressing Enter in any input to add the item
+  document.addEventListener('DOMContentLoaded', () => {
+    ['itemName', 'itemPrice', 'itemQty'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addItem();
+      });
+    });
+    renderCart();
+  });
+</script>
+
+</body>
+</html>
