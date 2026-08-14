@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Email Validation and Text Analysis</title>
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background-color: #eef2f5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+
+        h1 {
+            text-align: center;
+            color: #263238;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+        }
+
+        textarea {
+            width: 100%;
+            height: 180px;
+            padding: 15px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            font-size: 15px;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #546e7a;
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 30px;
+            background-color: #37474f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #263238;
+        }
+
+        .box {
+            margin-top: 15px;
+            padding: 18px;
+            background-color: #f8fafb;
+            border-left: 5px solid #546e7a;
+            border-radius: 8px;
+        }
+
+        .box h3 {
+            margin-top: 0;
+            color: #37474f;
+        }
+
+        .output {
+            line-height: 1.8;
+            word-break: break-word;
+        }
+
+        .valid {
+            color: green;
+            font-weight: bold;
+        }
+
+        .invalid {
+            color: red;
+            font-weight: bold;
+        }
+
+        .true {
+            color: green;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .false {
+            color: red;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .email-row {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: white;
+            border-radius: 6px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat {
+            background-color: #e9eef1;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .stat h2 {
+            margin: 5px;
+            color: #37474f;
+        }
+
+        .stat p {
+            margin: 0;
+            color: #666;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>📧 Email Validation & Text Analysis</h1>
+
+    <p class="subtitle">
+        Enter a paragraph to extract and validate email IDs
+    </p>
+
+
+    <!-- INPUT -->
+
+    <textarea id="textInput"
+        placeholder="Enter your paragraph here..."></textarea>
+
+
+    <button onclick="analyzeText()">
+        Analyze Text
+    </button>
+
+
+    <!-- EXTRACTED EMAILS -->
+
+    <div class="box">
+
+        <h3>📩 Extracted Emails</h3>
+
+        <div id="extractedEmails" class="output">
+            No result yet
+        </div>
+
+    </div>
+
+
+    <!-- VALIDATION -->
+
+    <div class="box">
+
+        <h3>✅ Email Validation</h3>
+
+        <div id="emailValidation" class="output">
+            No result yet
+        </div>
+
+    </div>
+
+
+    <!-- VALID EMAILS -->
+
+    <div class="box">
+
+        <h3>✔ Valid Emails</h3>
+
+        <div id="validEmails" class="output">
+            No result yet
+        </div>
+
+    </div>
+
+
+    <!-- INVALID EMAILS -->
+
+    <div class="box">
+
+        <h3>❌ Invalid Emails</h3>
+
+        <div id="invalidEmails" class="output">
+            No result yet
+        </div>
+
+    </div>
+
+
+    <!-- UPPERCASE -->
+
+    <div class="box">
+
+        <h3>🔠 Uppercase</h3>
+
+        <div id="uppercase" class="output">
+            No result yet
+        </div>
+
+    </div>
+
+
+    <!-- LOWERCASE -->
+
+    <div class="box">
+
+        <h3>🔡 Lowercase</h3>
+
+        <div id="lowercase" class="output">
+            No result yet
+        </div>
+
+    </div>
+
+
+    <!-- TEXT ANALYSIS -->
+
+    <div class="box">
+
+        <h3>📊 Text Analysis</h3>
+
+        <div class="stats">
+
+            <div class="stat">
+                <h2 id="length">0</h2>
+                <p>Text Length</p>
+            </div>
+
+            <div class="stat">
+                <h2 id="words">0</h2>
+                <p>No. of Words</p>
+            </div>
+
+            <div class="stat">
+                <h2 id="emailCount">0</h2>
+                <p>"email" Occurrence</p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- WELCOME -->
+
+    <div class="box">
+
+        <h3>🔍 Contains "Welcome"</h3>
+
+        <div id="welcome" class="output">
+            No result yet
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function analyzeText() {
+
+    let text = document.getElementById("textInput").value;
+
+
+    // =================================================
+    // 1. EXTRACT EMAIL-LIKE PATTERNS
+    // =================================================
+
+    /*
+       This regex intentionally extracts BOTH:
+
+       Valid:
+       abc@gmail.com
+
+       Invalid:
+       abc@gmail
+       test@.com
+       student@domain
+
+       So that we can validate them separately.
+    */
+
+    let extractionRegex =
+        /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})?/g;
+
+
+    let emails = text.match(extractionRegex) || [];
+
+
+    // Remove duplicate emails
+    emails = [...new Set(emails)];
+
+
+    // Remove unwanted punctuation
+    emails = emails.map(function(email) {
+
+        return email.replace(/[.,;:!?]+$/, "");
+
+    });
+
+
+    // =================================================
+    // 2. DISPLAY EXTRACTED EMAILS
+    // =================================================
+
+    if (emails.length === 0) {
+
+        document.getElementById("extractedEmails").innerText =
+            "No email IDs found.";
+
+    } else {
+
+        document.getElementById("extractedEmails").innerText =
+            emails.join(", ");
+
+    }
+
+
+    // =================================================
+    // 3. VALIDATION REGEX
+    // =================================================
+
+    let validationRegex =
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+
+    let validEmails = [];
+    let invalidEmails = [];
+
+
+    // Check every extracted email
+
+    emails.forEach(function(email) {
+
+        if (validationRegex.test(email)) {
+
+            validEmails.push(email);
+
+        } else {
+
+            invalidEmails.push(email);
+
+        }
+
+    });
+
+
+    // =================================================
+    // 4. TRUE / FALSE
+    // =================================================
+
+    let allValid =
+        emails.length > 0 &&
+        invalidEmails.length === 0;
+
+
+    if (allValid) {
+
+        document.getElementById("emailValidation").innerHTML =
+            '<span class="true">true</span>';
+
+    } else {
+
+        document.getElementById("emailValidation").innerHTML =
+            '<span class="false">false</span>';
+
+    }
+
+
+    // =================================================
+    // 5. VALID EMAILS
+    // =================================================
+
+    if (validEmails.length === 0) {
+
+        document.getElementById("validEmails").innerHTML =
+            "No valid emails found.";
+
+    } else {
+
+        document.getElementById("validEmails").innerHTML =
+            validEmails.map(function(email) {
+
+                return '<div class="email-row">' +
+                       email +
+                       ' → <span class="valid">Valid</span></div>';
+
+            }).join("");
+
+    }
+
+
+    // =================================================
+    // 6. INVALID EMAILS
+    // =================================================
+
+    if (invalidEmails.length === 0) {
+
+        document.getElementById("invalidEmails").innerHTML =
+            "No invalid emails found.";
+
+    } else {
+
+        document.getElementById("invalidEmails").innerHTML =
+            invalidEmails.map(function(email) {
+
+                return '<div class="email-row">' +
+                       email +
+                       ' → <span class="invalid">Invalid</span></div>';
+
+            }).join("");
+
+    }
+
+
+    // =================================================
+    // 7. UPPERCASE
+    // =================================================
+
+    document.getElementById("uppercase").innerText =
+        text.toUpperCase();
+
+
+    // =================================================
+    // 8. LOWERCASE
+    // =================================================
+
+    document.getElementById("lowercase").innerText =
+        text.toLowerCase();
+
+
+    // =================================================
+    // 9. CONTAINS "WELCOME"
+    // =================================================
+
+    let containsWelcome =
+        text.toLowerCase().includes("welcome");
+
+
+    document.getElementById("welcome").innerHTML =
+        containsWelcome
+        ? '<span class="true">true</span>'
+        : '<span class="false">false</span>';
+
+
+    // =================================================
+    // 10. TEXT LENGTH
+    // =================================================
+
+    document.getElementById("length").innerText =
+        text.length;
+
+
+    // =================================================
+    // 11. WORD COUNT
+    // =================================================
+
+    let words =
+        text.trim() === ""
+        ? []
+        : text.trim().split(/\s+/);
+
+
+    document.getElementById("words").innerText =
+        words.length;
+
+
+    // =================================================
+    // 12. OCCURRENCE OF "EMAIL"
+    // =================================================
+
+    let emailOccurrences =
+        text.match(/email/gi) || [];
+
+
+    document.getElementById("emailCount").innerText =
+        emailOccurrences.length;
+
+}
+
+</script>
+
+</body>
+
+</html>
