@@ -1,0 +1,315 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gym Admission Form</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #9d18d2;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .form-box {
+            width: 400px;
+            background: rgb(219, 162, 114);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px #bbb;
+        }
+
+        h2 {
+            text-align: center;
+            color: #159957;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #aaa;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .valid {
+            border: 2px solid green;
+        }
+
+        .invalid {
+            border: 2px solid red;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: #159957;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #117a45;
+        }
+
+        #acknowledgment {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f8ee;
+            border-left: 5px solid green;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="form-box">
+
+    <h2>🏋️ Gym Admission Form</h2>
+
+    <form id="gymForm">
+
+        <label>Name</label>
+        <input type="text" id="name" placeholder="Enter your name">
+        <div id="nameError" class="error"></div>
+
+        <label>Mobile Number</label>
+        <input type="text" id="mobile"
+               placeholder="10 digit mobile number"
+               maxlength="10">
+        <div id="mobileError" class="error"></div>
+
+        <label>Email</label>
+        <input type="text" id="email"
+               placeholder="Enter your email">
+        <div id="emailError" class="error"></div>
+
+        <label>Age</label>
+        <input type="number" id="age"
+               placeholder="Age 15 - 50">
+        <div id="ageError" class="error"></div>
+
+        <label>Membership Plan</label>
+        <select id="plan">
+            <option value="">Select Plan</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+            <option value="Yearly">Yearly</option>
+        </select>
+        <div id="planError" class="error"></div>
+
+        <button type="submit">Submit Admission</button>
+
+    </form>
+
+
+    <!-- ACKNOWLEDGMENT -->
+    <div id="acknowledgment">
+
+        <h3>✅ Admission Successful!</h3>
+
+        <p>Welcome, <b id="ackName"></b>!</p>
+
+        <p>Mobile: <b id="ackMobile"></b></p>
+
+        <p>Email: <b id="ackEmail"></b></p>
+
+        <p>Age: <b id="ackAge"></b></p>
+
+        <p>Membership: <b id="ackPlan"></b></p>
+
+        <p>Thank you for joining our gym! 💪</p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    // Accessing form fields
+    const name = document.getElementById("name");
+    const mobile = document.getElementById("mobile");
+    const email = document.getElementById("email");
+    const age = document.getElementById("age");
+    const plan = document.getElementById("plan");
+    const form = document.getElementById("gymForm");
+
+
+    // Name validation
+    name.addEventListener("input", function() {
+
+        if (name.value.trim() == "") {
+
+            name.classList.add("invalid");
+            name.classList.remove("valid");
+
+            document.getElementById("nameError").innerText =
+                "Invalid: Enter your name";
+
+        } else {
+
+            name.classList.add("valid");
+            name.classList.remove("invalid");
+
+            document.getElementById("nameError").innerText = "";
+        }
+    });
+
+
+    // Mobile validation
+    mobile.addEventListener("input", function() {
+
+        // Allow only numbers
+        mobile.value = mobile.value.replace(/\D/g, "");
+
+        if (mobile.value.length != 10) {
+
+            mobile.classList.add("invalid");
+            mobile.classList.remove("valid");
+
+            document.getElementById("mobileError").innerText =
+                "Invalid: Mobile number must be 10 digits";
+
+        } else {
+
+            mobile.classList.add("valid");
+            mobile.classList.remove("invalid");
+
+            document.getElementById("mobileError").innerText = "";
+        }
+    });
+
+
+    // Email validation
+    email.addEventListener("input", function() {
+
+        let pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!pattern.test(email.value)) {
+
+            email.classList.add("invalid");
+            email.classList.remove("valid");
+
+            document.getElementById("emailError").innerText =
+                "Invalid: Enter a valid email";
+
+        } else {
+
+            email.classList.add("valid");
+            email.classList.remove("invalid");
+
+            document.getElementById("emailError").innerText = "";
+        }
+    });
+
+
+    // Age validation
+    age.addEventListener("input", function() {
+
+        let ageValue = Number(age.value);
+
+        if (age.value == "" || ageValue < 15 || ageValue > 50) {
+
+            age.classList.add("invalid");
+            age.classList.remove("valid");
+
+            document.getElementById("ageError").innerText =
+                "Invalid: Age must be between 15 and 50";
+
+        } else {
+
+            age.classList.add("valid");
+            age.classList.remove("invalid");
+
+            document.getElementById("ageError").innerText = "";
+        }
+    });
+
+
+    // Membership validation
+    plan.addEventListener("change", function() {
+
+        if (plan.value == "") {
+
+            plan.classList.add("invalid");
+            plan.classList.remove("valid");
+
+            document.getElementById("planError").innerText =
+                "Invalid: Select a membership plan";
+
+        } else {
+
+            plan.classList.add("valid");
+            plan.classList.remove("invalid");
+
+            document.getElementById("planError").innerText = "";
+        }
+    });
+
+
+    // Submit event
+    form.addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+        // Final validation
+        if (
+            name.value.trim() == "" ||
+            mobile.value.length != 10 ||
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value) ||
+            age.value < 15 ||
+            age.value > 50 ||
+            plan.value == ""
+        ) {
+
+            alert("Please enter valid details.");
+            return;
+        }
+
+
+        // Get input values using .value
+        let memberName = name.value;
+        let memberMobile = mobile.value;
+        let memberEmail = email.value;
+        let memberAge = age.value;
+        let memberPlan = plan.value;
+
+
+        // Display acknowledgment
+        document.getElementById("ackName").innerText = memberName;
+        document.getElementById("ackMobile").innerText = memberMobile;
+        document.getElementById("ackEmail").innerText = memberEmail;
+        document.getElementById("ackAge").innerText = memberAge;
+        document.getElementById("ackPlan").innerText = memberPlan;
+
+        document.getElementById("acknowledgment").style.display = "block";
+
+    });
+
+</script>
+
+</body>
+</html>
+```
